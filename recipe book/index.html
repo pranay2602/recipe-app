@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Book App</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <header>
+        <h2>Recipe Book App</h2>
+        <img src="search.svg" alt="Search" />
+    </header>
+    <section class="container">
+        <div class="loading-container"></div>
+        <div class="search">
+            <input id="txtSearch" type="text" placeholder="Search Favorite" autofocus />
+            <button class="btn">Search</button>
+        </div>
+        <div id="recipe-container"></div>
+    </section>
+    <script>
+        const appId = "80411d51";
+        const appKey = "911dc663c595e5fe905f805c07d2428f";
+        const baseUrl = `https://api.edamam.com/api/recipes/v2?type=public&app_id=${appId}&app_key=${appKey}`;
+        const recipeContainer = document.querySelector("#recipe-container");
+        const txtSearch = document.querySelector("#txtSearch");
+        const btnSearch = document.querySelector(".btn");
+        const loadingContainer = document.querySelector(".loading-container");
+    
+        function toggleFavorite(favoriteIcon) {
+            favoriteIcon.classList.toggle('favorited');
+        }
+    
+        btnSearch.addEventListener("click", () => loadRecipes(txtSearch.value));
+    
+        function loadRecipes(type = "All") {
+            loadingContainer.style.display = "block";
+            const url = `${baseUrl}&q=${type}`;
+            fetch(url)
+                .then(res => res.json())
+                .then((data) => renderRecipes(data.hits))
+                .catch((error) => console.log(error))
+                .finally(() => {
+                    loadingContainer.style.display = "none";
+                    setScrollPosition();
+                });
+        }
+    
+        function setScrollPosition() {
+            recipeContainer.scrollTo({ top: 0, behavior: "smooth" });
+        }
+    
+        txtSearch.addEventListener("keyup", (e) => {
+            const inputVal = txtSearch.value;
+            if (e.key === "Enter") {
+                loadRecipes(inputVal);
+            }
+        });
+    
+        function renderRecipes(recipeList = []) {
+            recipeContainer.innerHTML = "";
+            recipeList.forEach((recipeObj) => {
+                const {
+                    label: recipeTitle,
+                    ingredientLines,
+                    image: recipeImage,
+                } = recipeObj.recipe;
+    
+                const htmlStr = `<div class="recipe">
+                    <div class="recipe-title">${recipeTitle}</div>
+                    <div class="favorite" onclick="toggleFavorite(this)">
+                        <span class="heart">&hearts;</span>
+                    </div>
+                    <div class="recipe-image">
+                        <img src="${recipeImage}" alt="${recipeTitle}" />
+                    </div>
+                    <div class="recipe-text">
+                        <ul>
+                            ${ingredientLines.map(ingredient => `<li>${ingredient}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>`;
+    
+                recipeContainer.insertAdjacentHTML("beforeend", htmlStr);
+            });
+        }
+    </script>
+</body>
+</html>
